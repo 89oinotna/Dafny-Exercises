@@ -22,7 +22,7 @@ method mMergeSort(a:array<int>, c:int, f:int)//f excluded
 decreases f-c
 modifies a 
 requires 0 <= c <= f <= a.Length //when c==f empty sequence
-//ensures sorted_seg(a,c,f) //you need to prove sortedness property in merge method in order to have this property
+ensures sorted_seg(a,c,f) //you need to prove sortedness property in merge method in order to have this property
 ensures multiset(a[c..f]) == old(multiset(a[c..f]))
 ensures a[..c]==old(a[..c]) && a[f..]==old(a[f..])
 {
@@ -60,11 +60,12 @@ ensures a[..c]==old(a[..c]) && a[f..]==old(a[f..])
    assert multiset(a[c..f])==multiset(a3[c..f]);
   } 
 }
+
 method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
  modifies v
  requires 0<=c<=m<=f<=v.Length
- //requires sorted_seg(v,c,m) && sorted_seg(v,m,f) //You need this to prove mergesort is correct
- //ensures sorted_seg(v,c,f)
+ requires sorted_seg(v,c,m) && sorted_seg(v,m,f) //You need this to prove mergesort is correct
+ ensures sorted_seg(v,c,f)
  ensures multiset(v[c..f])==multiset(old(v[c..f]))
  ensures v[..c]==old(v[..c]) && v[f..]==old(v[f..])
  {
@@ -72,45 +73,67 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
  var j:=m;
  var k:=0;
  var mezcla:=new int[f-c];
- while (i<m && j<f)
-   invariant c<=i<=m && m<=j<=f
+ while (i< m && j <  f)
+   invariant c <= i <=m && m<=j<=f
    invariant k == (i-c)+(j-m) && 0<=k<=f-c
-   //invariant //add sortedness properties
    invariant multiset(mezcla[0..k]) == multiset(v[c..i]+v[m..j])
    invariant multiset(v[c..f])==multiset(old(v[c..f]))
    invariant v[..c]==old(v[..c]) && v[f..]==old(v[f..])
+   
+   invariant forall l,z::0<=l <k && i<= z <m  ==> mezcla[l] <= v[z]
+  invariant forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z]
+   invariant sorted_seg(mezcla, 0, k)//add sortedness properties
+    invariant sorted_seg(v,c,m)
+    invariant sorted_seg(v, m, f)
    decreases (m-i+f-j)
  {
-   if (v[i]<=v[j])
-   {
-    mezcla[k]:=v[i];
-	i:=i+1;
-   }
-   else 
-   {mezcla[k]:=v[j];
-    j:=j+1;
+    if (v[i]<=v[j])
+    {
+      //assert forall l::0<=l<k==>mezcla[l] <= v[i];
+      mezcla[k]:=v[i];
+	    i:=i+1;
     }
-	k:=k+1;
+    else 
+    {
+      mezcla[k]:=v[j];
+      j:=j+1;
+    }
+	  k:=k+1;
  }
  
- while (i<m)
+  assert forall l,z,x::0<= l< k && i<=z< m && j<=x< f ==> mezcla[l] <= v[z] && mezcla[l] <= v[x]; 
+ //assert forall z,l:: 0<=l <k && i<=z<m ==> mezcla[l] <= v[z] ;
+ assert forall l,z::0<=l <k && i<= z <m  ==> mezcla[l] <= v[z];
+  assert forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z];
+ while ( i < m)
     decreases v.Length-i
     invariant c<=i<=m && m<=j<=f
     invariant k == (i-c)+(j-m) && 0<=k<=f-c
-    //invariant //add sortedness properties
+    invariant sorted_seg(v,c,m)
+    invariant sorted_seg(v, m, f)
+    invariant sorted_seg(mezcla, 0, k)//add sortedness properties
+    invariant forall z,l:: 0<=l <k && i<=z<m ==> mezcla[l] <= v[z] 
+    invariant forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z]
     invariant multiset(mezcla[0..k]) == multiset(v[c..i]+v[m..j])
     invariant multiset(v[c..f])==multiset(old(v[c..f]))
     invariant v[..c]==old(v[..c]) && v[f..]==old(v[f..])
  {  mezcla[k]:=v[i];
     i:=i+1;
-    k:=k+1;}
+    k:=k+1;
+    }
 
  
+  assert forall l,z,x::0<= l< k && i<=z< m && j<=x< f ==> mezcla[l] <= v[z] && mezcla[l] <= v[x]; 
+  assert forall l,z::0<=l <k && i<= z <m  ==> mezcla[l] <= v[z];
+  assert forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z];
  while (j<f)
     decreases f-j
     invariant m<=j<=f
     invariant k == (i-c)+(j-m)
-    //invariant //add sortedness properties
+    invariant sorted_seg(v,c,m)
+    invariant sorted_seg(v, m, f)
+    invariant sorted_seg(mezcla, 0, k)//add sortedness properties
+    invariant forall z,l:: 0<=l <k && j<=z<f ==> mezcla[l] <= v[z] 
     invariant multiset(mezcla[0..k]) == multiset(v[c..i]+v[m..j])
     invariant multiset(v[c..f])==multiset(old(v[c..f]))
     invariant v[..c]==old(v[..c]) && v[f..]==old(v[f..])
@@ -119,11 +142,14 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
    j:=j+1;
    k:=k+1;
  }
+
+ 
  assert i==m && j==f;
  assert multiset(mezcla[0..f-c])==multiset(v[c..m]+v[m..f]);
  assert v[c..m]+v[m..f]==v[c..f];
  assert multiset(old(v[c..f]))==multiset(mezcla[0..f-c]);
- //assert sorted_seg(mezcla,0,f-c);
+ assert sorted_seg(mezcla,0,f-c);
+
 
  var l:=0;//copy back the elements
  while (l<f-c)
@@ -132,7 +158,8 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
   invariant mezcla[0..l]==v[c..l+c]
   invariant multiset(old(v[c..f]))==multiset(mezcla[0..f-c])
   invariant v[..c]==old(v[..c]) && v[f..]==old(v[f..])
-  //invariant //add sortedness properties
+  invariant sorted_seg(mezcla,0,f-c)
+  invariant sorted_seg(v,c,l+c)//add sortedness properties
   { v[l+c]:=mezcla[l]; 
     l:=l+1;
   }
@@ -141,6 +168,7 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
   //assert sorted_seg(mezcla,0,f-c);
   //sorted(mezcla,v,c,f);
   //assert sorted_seg(v,c,f);
+  
   
  }
 

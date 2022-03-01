@@ -106,6 +106,14 @@ requires (forall j :: c <= j <= f ==> a[j] <= x)
 requires multiset(a[c..f+1]) == multiset(b[c..f+1])
 ensures (forall j :: c <= j <= f ==> b[j] <= x)
 //Prove this
+{
+       forall j | c<=j<=f 
+       ensures b[j]<=x{
+             assert b[j] in a[c..f+1];
+              assert exists i::c<=i<=f && a[i] == b[j];
+           
+       }
+}
 
 
 

@@ -25,7 +25,7 @@ method InsertionSort(a: array<int>)
      var j := i;         
      while (j > 0 && temp < a[j - 1])
          decreases j
-         invariant 0<=j<=i<a.Length
+         invariant 0<=j<=i
          invariant sorted_seg(a,0,j-1) && sorted_seg(a,j+1,i)
          invariant forall k,l :: 0<=k<=j-1 && j+1<=l<=i ==> a[k]<=a[l]
          invariant forall k :: j<k<=i ==> temp <a[k]
