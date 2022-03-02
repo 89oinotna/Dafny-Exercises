@@ -101,10 +101,6 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
 	  k:=k+1;
  }
  
-  assert forall l,z,x::0<= l< k && i<=z< m && j<=x< f ==> mezcla[l] <= v[z] && mezcla[l] <= v[x]; 
- //assert forall z,l:: 0<=l <k && i<=z<m ==> mezcla[l] <= v[z] ;
- assert forall l,z::0<=l <k && i<= z <m  ==> mezcla[l] <= v[z];
-  assert forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z];
  while ( i < m)
     decreases v.Length-i
     invariant c<=i<=m && m<=j<=f
@@ -123,9 +119,6 @@ method {:timeLimitMultiplier 2} mMerge(v:array<int>,c:int,m:int,f:int)
     }
 
  
-  assert forall l,z,x::0<= l< k && i<=z< m && j<=x< f ==> mezcla[l] <= v[z] && mezcla[l] <= v[x]; 
-  assert forall l,z::0<=l <k && i<= z <m  ==> mezcla[l] <= v[z];
-  assert forall l,z::0<=l <k && j<= z <f ==> mezcla[l] <= v[z];
  while (j<f)
     decreases f-j
     invariant m<=j<=f
