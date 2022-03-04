@@ -32,6 +32,7 @@ decreases f-c
 
              assert multiset(a[c..p]) == multiset(a1[c..p]);
 
+              assert forall j :: c <= j <= p-1 ==> a1[j] <= a[p];
              multisetPreservesSmaller(a1,a[..],c,p-1,a[p]);
        
              //assert (forall u::c<=u<=p ==> a[u]<=a[p])&&
@@ -107,11 +108,11 @@ requires multiset(a[c..f+1]) == multiset(b[c..f+1])
 ensures (forall j :: c <= j <= f ==> b[j] <= x)
 //Prove this
 {
+
        forall j | c<=j<=f 
        ensures b[j]<=x{
-             assert b[j] in a[c..f+1];
-              assert exists i::c<=i<=f && a[i] == b[j];
-           
+             assert  multiset(a[c..f+1]) == multiset(b[c..f+1]);    
+             assert forall k::c<=k<=f ==> b[k] in multiset(a[c..f+1]);
        }
 }
 
@@ -123,6 +124,13 @@ requires (forall j :: c <= j <= f ==> a[j] >= x)
 requires multiset(a[c..f+1]) == multiset(b[c..f+1])
 ensures (forall j :: c <= j <= f ==> b[j] >= x)
 //Prove this
+{
+       forall j | c<=j<=f 
+       ensures b[j]>=x{
+             assert  multiset(a[c..f+1]) == multiset(b[c..f+1]);    
+             assert forall k::c<=k<=f ==> b[k] in multiset(a[c..f+1]);
+       }
+}
 
 
 
@@ -130,3 +138,8 @@ lemma seqSplit(s:seq<int>, c:int, p:int, f:int)//f excluded
 requires 0<=c<=p<=f+1<=|s|
 ensures multiset(s[c..f+1])==multiset(s[c..p])+multiset(s[p..f+1])
 //Prove this
+{
+forall s : seq<int>,i,j,k | 0<=i<=k<=j<=|s|
+    ensures multiset(s[i..k])+multiset(s[k..j])==multiset(s[i..j])
+    {assert s[i..k]+s[k..j]==s[i..j];}
+}
