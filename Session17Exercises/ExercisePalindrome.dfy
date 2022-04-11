@@ -79,7 +79,7 @@ ensures s.Valid() && q.Valid()
 
 //ensures: write the properties concerning the model and result b
 //l is unchanged and b is true iff l is palindrome
-ensures l.Valid() && old(l).Model()==l.Model()
+ensures old(l.Model())==l.Model()
 ensures b <==> l.Model() == Seq.Rev(l.Model())
 
 ensures l.Iterators() >= old(l.Iterators())
@@ -100,22 +100,16 @@ ensures forall x | x in q.Repr() :: allocated(x)
   fillStack(l,s); 
   fillQueue(l,q); 
 
-  assert s.Model()==Seq.Rev(l.Model());
+  assert s.Model()==Seq.Rev(q.Model()) == Seq.Rev(l.Model());
+  assert s.Model() == Seq.Rev(l.Model()[(|l.Model()| - |q.Model()|)..]);
   assert q.Model() == l.Model();
   assert |s.Model()| == |q.Model()| == |l.Model()| == l.Size();
   assert q.Valid();
-
-  var it:=l.Begin();
+  assert q.Model() == l.Model()[(|l.Model()| - |q.Model()|)..];
+ 
   //loop to check that l is palindrome using s and q
-  while(!s.Empty() && !q.Empty() && s.Top() == q.Front())
-  invariant s.Valid()
-  invariant q.Valid()
-  //invariant l == old(l)
-  invariant l.Valid()
-  invariant l.Model() == old(l).Model()
-  invariant |s.Model()| == |q.Model()|
-  decreases |s.Model()|, |q.Model()|
 
+  while(!s.Empty() /*&& !q.Empty()*/ && s.Top() == q.Front())
   invariant forall x {:trigger x in l.Repr(), x in old(l.Repr())} | x in l.Repr() && x !in old(l.Repr()) :: fresh(x)
   invariant fresh(l.Repr()-old(l.Repr()))
   invariant forall x | x in l.Repr() :: allocated(x)
@@ -127,27 +121,42 @@ ensures forall x | x in q.Repr() :: allocated(x)
   invariant forall x {:trigger x in l.Repr(), x in old(q.Repr())} | x in q.Repr() && x !in old(q.Repr()) :: fresh(x)
   invariant fresh(q.Repr()-old(q.Repr()))
   invariant forall x | x in q.Repr() :: allocated(x)
+
   invariant {l}+l.Repr()!! {s}+s.Repr()
   invariant {l}+l.Repr()!! {q}+q.Repr()
   invariant {q}+q.Repr()!! {s}+s.Repr()
-  //invariant l.Iterators() >= old(l.Iterators())
-  invariant it.Parent() == l
-  invariant it.Valid()
-  invariant 0<= it.Index() <= l.Size()
-  invariant forall i| 0<= i<it.Index() :: l.Model()[i] == Seq.Rev(l.Model())[i];
+  
+  invariant l.Valid()
+  invariant s.Valid()
+  invariant q.Valid()
+  invariant |s.Model()| == |q.Model()|
+  decreases |s.Model()|, |q.Model()|
+  invariant |q.Model()| <= |l.Model()|
+  invariant l.Model() == old(l.Model())
+
+  invariant l.Iterators() !! {s}+s.Repr()
+  invariant l.Iterators() !! {q}+q.Repr()
+  
+  invariant l.Iterators() >= old(l.Iterators())
+
+  invariant q.Model() == l.Model()[(|l.Model()| - |q.Model()|)..]
+  invariant s.Model() == Seq.Rev(l.Model())[(|l.Model()| - |s.Model()|)..]
+  invariant l.Model()[..(|l.Model()| - |q.Model()|)] == Seq.Rev(l.Model())[..(|l.Model()| - |s.Model()|)]
+
+  //invariant forall i | 0<= i< |l.Model()| - |q.Model()| :: l.Model()[i] == Seq.Rev(l.Model())[i];
+ 
+
   {
-    //assert 
     var sr := s.Pop();
     var sq := q.Dequeue();
-    //assert sr == sq;
+
   }
-  if(s.Empty() /*&& q.Empty()*/){ 
+  if(s.Empty() && q.Empty()){ 
     assert l.Model() == Seq.Rev(l.Model());
     return true;
   }
   else{ 
-    assert l.Valid();
-    //assert s.Top() != q.Front();
+    assert exists i :: 0<=i< |l.Model()| && l.Model()[i] != Seq.Rev(l.Model())[i];
     assert l.Model() != Seq.Rev(l.Model());
     return false;
   }
