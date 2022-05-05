@@ -36,6 +36,49 @@ ensures fresh(s.Repr()-old(s.Repr()))
 ensures forall x | x in s.Repr() :: allocated(x)
 
 ensures l.Iterators() >= old(l.Iterators())
+{
+  var it:=l.Begin();
+
+  assert l.Model() == l.Model()[..|l.Model()|];
+  assert Seq.Rev(l.Model()) == Seq.Rev(l.Model()[..|l.Model()|]);
+  while(it.HasNext())
+  invariant l.Valid()
+  invariant it.Valid()
+  invariant it.Parent() == l
+  invariant l.Size() == old(l.Size())
+  decreases l.Size() - it.Index()
+  invariant it.Index() <= l.Size()
+  invariant l.Iterators() >= old(l.Iterators())
+  invariant s.Valid()
+
+  invariant {s}+s.Repr()!! {l}+l.Repr()
+  invariant l.Iterators() !! {s}+s.Repr()
+  invariant {it} !! {s}+s.Repr()
+   
+  invariant forall x {:trigger x in l.Repr(), x in old(l.Repr())} | x in l.Repr() && x !in old(l.Repr()) :: fresh(x)
+  invariant fresh(l.Repr()-old(l.Repr()))
+  invariant forall x | x in l.Repr() :: allocated(x)
+
+  invariant forall x {:trigger x in s.Repr(), x in old(s.Repr())} | x in s.Repr() && x !in old(s.Repr()) :: fresh(x)
+  invariant fresh(s.Repr()-old(s.Repr()))
+  invariant forall x | x in s.Repr() :: allocated(x)
+  
+  invariant l.Model() == old(l.Model())
+  invariant |s.Model()| == it.Index()
+
+  invariant s.Model()==Seq.Rev(l.Model()[..it.Index()]);
+  {
+
+      assert s.Model()==Seq.Rev(l.Model()[..it.Index()]);
+      var v:=it.Next();
+      assert v == l.Model()[it.Index()-1];
+      assert l.Model()[..it.Index()-1] + [v] ==l.Model()[..it.Index()];
+      s.Push(v);
+      Seq.LastRev(l.Model()[..it.Index()-1]+[v]);
+      assert [v]+s.Model()[1..] == [v]+ Seq.Rev(l.Model()[..it.Index()-1]) == Seq.Rev(l.Model()[..it.Index()-1]+[v]);
+      assert s.Model()==Seq.Rev(l.Model()[..it.Index()]);
+  }
+}
 
 
 method fillQueue(l:List, q:Queue)
@@ -59,7 +102,38 @@ ensures fresh(q.Repr()-old(q.Repr()))
 ensures forall x | x in q.Repr() :: allocated(x)
 
 ensures l.Iterators() >= old(l.Iterators())
+{
+  var it:=l.Begin();
 
+  while(it.HasNext())
+  invariant l.Valid()
+  invariant it.Valid()
+  invariant it.Parent() == l
+  invariant l.Size() == old(l.Size())
+  decreases l.Size() - it.Index()
+  invariant it.Index() <= l.Size()
+  invariant l.Iterators() >= old(l.Iterators())
+  invariant q.Valid()
+  invariant it in l.Iterators()
+  invariant {q}+q.Repr()!! {l}+l.Repr()
+  invariant l.Iterators() !! {q}+q.Repr()
+  //invariant {it} !! {q}+q.Repr()
+  
+  invariant forall x {:trigger x in l.Repr(), x in old(l.Repr())} | x in l.Repr() && x !in old(l.Repr()) :: fresh(x)
+  invariant fresh(l.Repr()-old(l.Repr()))
+  invariant forall x | x in l.Repr() :: allocated(x)
+
+  invariant forall x {:trigger x in q.Repr(), x in old(q.Repr())} | x in q.Repr() && x !in old(q.Repr()) :: fresh(x)
+  invariant fresh(q.Repr()-old(q.Repr()))
+  invariant forall x | x in q.Repr() :: allocated(x)
+
+  invariant l.Model() == old(l.Model())
+  invariant q.Model()==l.Model()[..it.Index()]
+  {
+      var v:=it.Next();
+      q.Enqueue(v);
+  }
+}
 
 
 
